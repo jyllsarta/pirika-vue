@@ -1,8 +1,15 @@
 {
   "name": "pirika-vue",
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "@rails/webpacker": "^4.0.7",
+    "vue": "^2.6.10",
+    "vue-loader": "^15.7.0",
+    "vue-template-compiler": "^2.6.10"
+  },
   "devDependencies": {
+    "webpack": "^4.35.3",
+    "webpack-cli": "^3.3.6",
     "webpack-dev-server": "^3.7.2"
   }
 }
