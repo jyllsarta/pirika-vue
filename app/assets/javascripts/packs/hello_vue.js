@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     el,
     render: h => h(App)
   });
-
-  console.log(app)
-
+  console.log(1 + 1);
 });
+
+console.log("updated!");
