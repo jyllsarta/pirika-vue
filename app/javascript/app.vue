@@ -13,6 +13,9 @@
                         <div class="v note" v-bind:class="{active: note.note &amp; constants.notes.v }"></div>
                     </div>
                 </transition-group>
+                <li class="sparks" v-for="spark in sparks">
+                    どばー(TODO いつかスパークになる)
+                </li>
             </div>
             <div class="ui">
                 <div class="score" v-if="gameState != this.constants.gameStates.title">
@@ -44,6 +47,7 @@
         life: 0,
         gameState: 0,
         sounds: {},
+        sparks: [],
       };
     },
     created: function(){
@@ -127,6 +131,7 @@
         this.life = this.constants.maxLife;
         this.currentTime = 0;
         this.timeDelta = 0;
+        this.sparks = [];
       },
 
       loadSounds: function(){
@@ -194,7 +199,6 @@
         if(this.isDanger){
           damage /= 2;
         }
-        console.log(damage);
         this.life -= parseInt(damage);
       },
 
@@ -265,6 +269,7 @@
           // 現状の構造だとキーが押されているかどうかしか判定されないので
           //this.sounds[lastKey].currentTime = 0;
           //this.sounds[lastKey].play();
+          this.addSpark();
           this.notes.shift();
           this.score++;
           this.life += this.constants.recoverPerNote;
@@ -287,6 +292,16 @@
           this.reset();
         }
       },
+
+      addSpark: function() {
+        this.sparks.push(
+          {
+            id: parseInt(Math.random() * 10000000), // とうぜん TODO
+            lifetime: 2,
+            note: this.constants.notes.z,
+          }
+        )
+      }
     }
   }
 </script>
