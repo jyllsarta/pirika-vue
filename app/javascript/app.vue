@@ -7,10 +7,10 @@
       <div class="frame_window">
         <transition-group class="frames" name="notes" tag="div">
           <div class="frame notes-item" v-bind:key="note.id" v-for="note in recentNotes">
-            <div class="z note" v-bind:class="{active: note.note & constants.notes.z, bad: note.bad && note.note & constants.notes.z }"></div>
-            <div class="x note" v-bind:class="{active: note.note & constants.notes.x, bad: note.bad && note.note & constants.notes.x}"></div>
-            <div class="c note" v-bind:class="{active: note.note & constants.notes.c, bad: note.bad && note.note & constants.notes.c}"></div>
-            <div class="v note" v-bind:class="{active: note.note & constants.notes.v, bad: note.bad && note.note & constants.notes.v}"></div>
+            <div class="z note" v-bind:class="{active: note.note & constants.notes.z, bad: note.bad && note.note & constants.notes.z, heal: note.heal}"></div>
+            <div class="x note" v-bind:class="{active: note.note & constants.notes.x, bad: note.bad && note.note & constants.notes.x, heal: note.heal}"></div>
+            <div class="c note" v-bind:class="{active: note.note & constants.notes.c, bad: note.bad && note.note & constants.notes.c, heal: note.heal}"></div>
+            <div class="v note" v-bind:class="{active: note.note & constants.notes.v, bad: note.bad && note.note & constants.notes.v, heal: note.heal}"></div>
           </div>
         </transition-group>
       </div>
@@ -43,6 +43,7 @@
         score: 0,
         life: 0,
         gameState: 0,
+        timeDelta: 0,
         sounds: {},
       };
     },
@@ -74,12 +75,14 @@
             "v": 0b1000,
           },
           currentTime: 0,
-          timeDelta: 0,
           maxLife: 10000,
           dangerLine: 3333,
           minDamagePerLife: 10,
           recoverPerNote: 250,
-          badDamage: 100,
+          recoverPerHealNote: 3000,
+          dangerDamageReduceRate: 0.65,
+          damageIncreaseSpeed: 0.4,
+          badDamage: 200,
           displayNotes: 16,
           initialNotes: 1000,
           gameStates: {
@@ -88,6 +91,7 @@
             gameOver: 2,
             cleared: 3,
           },
+          healNotesInterval: 25,
         }
       },
     },
@@ -109,8 +113,15 @@
                 id: this.notes.length,
                 note: note,
                 bad: false,
+                heal: false,
               }
             );
+          }
+          // 回復ノーツの仕込み
+          for(let i = 0; i < this.notes.length - 1; i++){
+            if(i % this.constants.healNotesInterval === 0){
+              this.notes[i].heal = true;
+            }
           }
         }
       },
@@ -139,7 +150,6 @@
 
       mountKeyboardEvent: function(){
         document.onkeydown = function (e) {
-          console.log(e);
           this.handleKeydown(e);
         }.bind(this);
         document.onkeyup = function (e) {
@@ -189,11 +199,10 @@
       },
 
       updateInGame: function(){
-        // TODO: ライフの減算量をフレームレート非依存にする
-        let damage = Math.max(this.score/ 2, this.constants.minDamagePerLife);
+        let damage = Math.max(this.score * this.constants.damageIncreaseSpeed, this.constants.minDamagePerLife);
         damage *= this.timeDelta / 17; // 1F=17msに合わせて補正する
         if(this.isDanger){
-          damage /= 2;
+          damage *= (1 - this.constants.dangerDamageReduceRate);
         }
         this.life -= parseInt(damage);
       },
@@ -266,9 +275,10 @@
           // 現状の構造だとキーが押されているかどうかしか判定されないので
           //this.sounds[lastKey].currentTime = 0;
           //this.sounds[lastKey].play();
-          this.notes.shift();
           this.score++;
-          this.life += this.constants.recoverPerNote;
+          this.life += this.notes[0].heal ? this.constants.recoverPerHealNote : this.constants.recoverPerNote;
+          this.life = Math.min(this.life, this.constants.maxLife);
+          this.notes.shift();
         }
 
         // クリア判定
@@ -398,8 +408,11 @@
       width: $note_width;
       height: $note_height;
     }
+    .heal{
+      background-color: rgba(22, 176, 0, 0.38);
+    }
     .active{
-      background-color: #0f0f0f;
+      background-color: rgba(5, 0, 255, 0.82);
     }
     .bad{
       background-color: #B00100;
