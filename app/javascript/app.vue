@@ -1,40 +1,37 @@
 <template>
-    <div id="app">
-        <h1>
-            zxcv
-        </h1>
-        <div class="window">
-            <div class="frame_window">
-                <transition-group class="frames" name="notes" tag="div">
-                    <div class="frame notes-item" v-bind:key="note.id" v-for="note in recentNotes">
-                        <div class="z note" v-bind:class="{active: note.note &amp; constants.notes.z }"></div>
-                        <div class="x note" v-bind:class="{active: note.note &amp; constants.notes.x }"></div>
-                        <div class="c note" v-bind:class="{active: note.note &amp; constants.notes.c }"></div>
-                        <div class="v note" v-bind:class="{active: note.note &amp; constants.notes.v }"></div>
-                    </div>
-                </transition-group>
-                <li class="sparks" v-for="spark in sparks">
-                    どばー(TODO いつかスパークになる)
-                </li>
-            </div>
-            <div class="ui">
-                <div class="score" v-if="gameState != this.constants.gameStates.title">
-                    {{score}}
-                </div>
-                <div class="life" v-bind:class="{ normal: !isDanger, danger: isDanger }" v-bind:style="{width: lifeLength}" v-if="gameState != this.constants.gameStates.title"></div>
-                <div class="dead" v-if="gameState == this.constants.gameStates.gameOver">
-                    GAME OVER (r to reset)
-                </div>
-                <div class="title" v-if="gameState == this.constants.gameStates.title">
-                    Z X C V
-                    kick zxcv to start
-                </div>
-                <div class="win" v-if="gameState == this.constants.gameStates.cleared">
-                    WIN (r to reset)
-                </div>
-            </div>
+  <div id="app">
+    <h1>
+      zxcv
+    </h1>
+    <div class="window">
+      <div class="frame_window">
+        <transition-group class="frames" name="notes" tag="div">
+          <div class="frame notes-item" v-bind:key="note.id" v-for="note in recentNotes">
+            <div class="z note" v-bind:class="{active: note.note & constants.notes.z, bad: note.bad && note.note & constants.notes.z }"></div>
+            <div class="x note" v-bind:class="{active: note.note & constants.notes.x, bad: note.bad && note.note & constants.notes.x}"></div>
+            <div class="c note" v-bind:class="{active: note.note & constants.notes.c, bad: note.bad && note.note & constants.notes.c}"></div>
+            <div class="v note" v-bind:class="{active: note.note & constants.notes.v, bad: note.bad && note.note & constants.notes.v}"></div>
+          </div>
+        </transition-group>
+      </div>
+      <div class="ui">
+        <div class="score" v-if="gameState != this.constants.gameStates.title">
+          {{score}}
         </div>
+        <div class="life" v-bind:class="{ normal: !isDanger, danger: isDanger }" v-bind:style="{width: lifeLength}" v-if="gameState != this.constants.gameStates.title"></div>
+        <div class="dead" v-if="gameState == this.constants.gameStates.gameOver">
+          GAME OVER (r to reset)
+        </div>
+        <div class="title" v-if="gameState == this.constants.gameStates.title">
+          Z X C V
+          kick zxcv to start
+        </div>
+        <div class="win" v-if="gameState == this.constants.gameStates.cleared">
+          WIN (r to reset)
+        </div>
+      </div>
     </div>
+  </div>
 </template>
 
 <script>
@@ -47,7 +44,6 @@
         life: 0,
         gameState: 0,
         sounds: {},
-        sparks: [],
       };
     },
     created: function(){
@@ -100,7 +96,7 @@
       initNotes: function () {
         this.notes = [];
         for (let i = 0; i < 100; ++i){
-          let notes = [0b0001, 0b0010, 0b0100, 0b1000];
+          let notes = [0b0001, 0b0010, 0b0100, 0b1000]; // TODO constants.notes.values とかにしたい
           for(let i = notes.length - 1; i > 0; i--){
             let r = Math.floor(Math.random() * (i + 1));
             let tmp = notes[i];
@@ -112,6 +108,7 @@
               {
                 id: this.notes.length,
                 note: note,
+                bad: false,
               }
             );
           }
@@ -131,7 +128,6 @@
         this.life = this.constants.maxLife;
         this.currentTime = 0;
         this.timeDelta = 0;
-        this.sparks = [];
       },
 
       loadSounds: function(){
@@ -263,13 +259,13 @@
           // ここで対応するbadの演出出せると良いなあ
           this.score -= 1;
           this.life -= this.constants.badDamage;
+          this.notes[0].bad = true;
         }
 
         if((keyStatus & this.notes[0].note) === this.notes[0].note){
           // 現状の構造だとキーが押されているかどうかしか判定されないので
           //this.sounds[lastKey].currentTime = 0;
           //this.sounds[lastKey].play();
-          this.addSpark();
           this.notes.shift();
           this.score++;
           this.life += this.constants.recoverPerNote;
@@ -292,130 +288,122 @@
           this.reset();
         }
       },
-
-      addSpark: function() {
-        this.sparks.push(
-          {
-            id: parseInt(Math.random() * 10000000), // とうぜん TODO
-            lifetime: 2,
-            note: this.constants.notes.z,
-          }
-        )
-      }
     }
   }
 </script>
 
 <style lang='scss' scoped>
-    $note_width: 180px;
-    $note_height: 30px;
-    $note_count: 16;
+  $note_width: 180px;
+  $note_height: 30px;
+  $note_count: 16;
 
-    .window{
-        display: block;
-        position: relative;
-        width: $note_width * 4 + 50;
-        height: $note_height * $note_count + 50;
-        padding: 0px 25px 50px 25px;
-        margin: auto;
-    }
+  .window{
+    display: block;
+    position: relative;
+    width: $note_width * 4 + 50;
+    height: $note_height * $note_count + 50;
+    padding: 0px 25px 50px 25px;
+    margin: auto;
+  }
 
-    .ui{
-        z-index: 100;
-    }
+  .ui{
+    z-index: 100;
+  }
 
-    .score{
-        position: absolute;
-        left: 20%;
-        bottom: 30%;
-        width: 60%;
-        text-align: center;
-        opacity: 0.8;
-        font-size: 40px;
-    }
+  .score{
+    position: absolute;
+    left: 20%;
+    bottom: 30%;
+    width: 60%;
+    text-align: center;
+    opacity: 0.8;
+    font-size: 40px;
+  }
 
-    .life{
-        height: 20px;
-        transform: translateY(-100px);
-        opacity: 0.4;
-    }
+  .life{
+    height: 20px;
+    transform: translateY(-100px);
+    opacity: 0.4;
+  }
 
-    .normal{
-        background-color: #0b5daa;
-    }
+  .normal{
+    background-color: #0b5daa;
+  }
 
-    .danger{
-        background-color: #aa3a0d;
-    }
+  .danger{
+    background-color: #aa3a0d;
+  }
 
-    .dead{
-        position: absolute;
-        left: 20%;
-        bottom: 40%;
-        width: 60%;
-        opacity: 0.8;
-        font-size: 40px;
-        text-align: center;
-        color: #B00100;
-    }
+  .dead{
+    position: absolute;
+    left: 20%;
+    bottom: 40%;
+    width: 60%;
+    opacity: 0.8;
+    font-size: 40px;
+    text-align: center;
+    color: #B00100;
+  }
 
-    .title{
-        white-space: pre;
-        position: absolute;
-        left: 10%;
-        bottom: 40%;
-        width: 80%;
-        opacity: 0.8;
-        font-size: 60px;
-        text-align: center;
-        color: #5169b0;
-    }
+  .title{
+    position: absolute;
+    left: 10%;
+    bottom: 40%;
+    width: 80%;
+    opacity: 0.8;
+    font-size: 60px;
+    text-align: center;
+    color: #5169b0;
+  }
 
-    .win{
-        position: absolute;
-        left: 20%;
-        bottom: 40%;
-        width: 60%;
-        opacity: 0.8;
-        font-size: 40px;
-        text-align: center;
-        color: #5366e1;
-    }
+  .win{
+    position: absolute;
+    left: 20%;
+    bottom: 40%;
+    width: 60%;
+    opacity: 0.8;
+    font-size: 40px;
+    text-align: center;
+    color: #5366e1;
+  }
 
-    .frame_window{
-        z-index: 10;
-        transform: scaleY(1.6) perspective(40px) rotateX(5deg);
-        transform-origin: bottom center;
-        width: $note_width * 4;
-        height: $note_height * $note_count;
-    }
+  .frame_window{
+    z-index: 10;
+    transform: scaleY(1.6) perspective(40px) rotateX(5deg);
+    transform-origin: bottom center;
+    width: $note_width * 4;
+    height: $note_height * $note_count;
+  }
 
-    .notes-item{
-        transition: all 0.3s;
-    }
-    .notes-enter, .notes-leave-to{
-        opacity: 0;
-        transform: scale(0.2);
-    }
+  .notes-item{
+    transition: all 0.3s;
+  }
+  .notes-enter, .notes-leave-to{
+    opacity: 0;
+    transform: scale(0.2);
+  }
 
-    .frames{
-        display: flex;
-        flex-direction: column;
-        width: $note_width * 4;
-        height: $note_height * $note_count;
+  .frames{
+    display: flex;
+    flex-direction: column;
+    width: $note_width * 4;
+    height: $note_height * $note_count;
+  }
+  .frame{
+    display: flex;
+    flex-direction: row;
+    width: $note_width * 4;
+    height: $note_height;
+    .note{
+      width: $note_width;
+      height: $note_height;
     }
-    .frame{
-        display: flex;
-        flex-direction: row;
-        width: $note_width * 4;
-        height: $note_height;
-        .note{
-            width: $note_width;
-            height: $note_height;
-        }
-        .active{
-            background-color: #0f0f0f;
-        }
+    .active{
+      background-color: #0f0f0f;
     }
+    .bad{
+      background-color: #B00100;
+    }
+  }
 
 </style>
