@@ -88,10 +88,10 @@
           dangerLine: 3333,
           safeLine: 9950,
           minDamagePerLife: 10,
-          recoverPerNote: 150,
-          recoverPerHealNote: 4500,
-          dangerDamageReduceRate: 0.50,
-          damageIncreaseSpeed: 0.25,
+          recoverPerNote: 130,
+          recoverPerHealNote: 4000,
+          dangerDamageReduceRate: 0.60,
+          damageIncreaseSpeed: 0.16,
           badDamage: 300,
           displayNotes: 16,
           initialNotes: 1000,
@@ -102,40 +102,35 @@
             cleared: 3,
           },
           healNotesInterval: 25,
+          notePatterns: [
+            [0b0001, 0b0010, 0b0100, 0b1000],
+            [0b1000, 0b0100, 0b0010, 0b0001],
+            //[0b1001, 0b0110, 0b1001, 0b0110],
+            [0b1000, 0b0001, 0b1100, 0b0011],
+            [0b0001, 0b0010, 0b0100, 0b1000],
+            [0b0010, 0b0100, 0b0010, 0b0100],
+            [0b0100, 0b0010, 0b0100, 0b0010],
+            [0b1000, 0b0001, 0b1000, 0b0001],
+            [0b0001, 0b1000, 0b0001, 0b1000],
+            [0b0001, 0b1000, 0b0100, 0b0010],
+            [0b1000, 0b0001, 0b0010, 0b0100],
+            [0b0010, 0b0100, 0b1000, 0b0001],
+            [0b0100, 0b0010, 0b0001, 0b1000],
+            //[0b0001, 0b0010, 0b0100, 0b0111],
+            //[0b1000, 0b0100, 0b0010, 0b1110],
+          ],
         }
       },
     },
     methods: {
       // initializers
       initNotes: function () {
-        this.notes = [];
-        for (let i = 0; i < 100; ++i){
-          let notes = Object.values(this.constants.notes);
-          for(let i = notes.length - 1; i > 0; i--){
-            let r = Math.floor(Math.random() * (i + 1));
-            let tmp = notes[i];
-            notes[i] = notes[r];
-            notes[r] = tmp;
-          }
-          for(let note of notes){
-            this.notes.push(
-              {
-                id: this.notes.length,
-                note: note,
-                z: note & this.constants.notes.z,
-                x: note & this.constants.notes.x,
-                c: note & this.constants.notes.c,
-                v: note & this.constants.notes.v,
-                bad: false,
-                heal: false,
-              }
-            );
-          }
-          // 回復ノーツの仕込み
-          for(let i = 0; i < this.notes.length - 1; i++){
-            if(i % this.constants.healNotesInterval === 0){
-              this.notes[i].heal = true;
-            }
+        // this.notes を埋める
+        this.notes = this.generateNotes();
+        // 40ノーツごとに回復ノーツにする
+        for(let i = 0; i < this.notes.length - 1; i++){
+          if(i % this.constants.healNotesInterval === 0){
+            this.notes[i].heal = true;
           }
         }
       },
@@ -143,6 +138,53 @@
         for(let i = "a".charCodeAt(0); i <= "z".charCodeAt(0); i++) {
           this.keyboard[String.fromCharCode(i)] = 0;
         }
+      },
+
+      generateNotes: function(){
+        let notes = [];
+        for (let i = 0; i < 50; ++i){
+          notes = notes.concat(this.getRandomMeasure());
+          notes = notes.concat(this.getPatternedMeasure());
+        }
+        return notes;
+      },
+
+      getRandomMeasure: function(){
+        let measure = [];
+        const notes = Object.values(this.constants.notes);
+        for(let i = notes.length - 1; i > 0; i--){
+          let r = Math.floor(Math.random() * (i + 1));
+          let tmp = notes[i];
+          notes[i] = notes[r];
+          notes[r] = tmp;
+        }
+        for(let note of notes){
+          measure.push(this.newNote(note));
+        }
+        return measure;
+      },
+
+      getPatternedMeasure: function(){
+        const rand = Math.floor(Math.random() * this.constants.notePatterns.length);
+        const pattern = this.constants.notePatterns[rand];
+        let measure = [];
+        for(let note of pattern){
+          measure.push(this.newNote(note));
+        }
+        return measure;
+      },
+
+      newNote: function(note){
+        return {
+          id: Math.floor(Math.random() * 100000000000),
+          note: note,
+          z: note & this.constants.notes.z,
+          x: note & this.constants.notes.x,
+          c: note & this.constants.notes.c,
+          v: note & this.constants.notes.v,
+          bad: false,
+          heal: false,
+        };
       },
 
       reset: function(){
