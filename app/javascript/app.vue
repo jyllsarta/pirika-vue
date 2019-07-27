@@ -7,26 +7,26 @@
       <div class="frame_window">
         <transition-group class="frames" name="notes" tag="div">
           <div class="frame notes-item" v-bind:key="note.id" v-for="note in recentNotes">
-            <div class="z note" v-bind:class="{active: note.note & constants.notes.z, bad: note.bad && note.note & constants.notes.z, heal: note.heal}"></div>
-            <div class="x note" v-bind:class="{active: note.note & constants.notes.x, bad: note.bad && note.note & constants.notes.x, heal: note.heal}"></div>
-            <div class="c note" v-bind:class="{active: note.note & constants.notes.c, bad: note.bad && note.note & constants.notes.c, heal: note.heal}"></div>
-            <div class="v note" v-bind:class="{active: note.note & constants.notes.v, bad: note.bad && note.note & constants.notes.v, heal: note.heal}"></div>
+            <div class="z note" v-bind:class="{active: note.z, bad: note.bad && note.z, heal: note.heal}"></div>
+            <div class="x note" v-bind:class="{active: note.x, bad: note.bad && note.x, heal: note.heal}"></div>
+            <div class="c note" v-bind:class="{active: note.c, bad: note.bad && note.c, heal: note.heal}"></div>
+            <div class="v note" v-bind:class="{active: note.v, bad: note.bad && note.v, heal: note.heal}"></div>
           </div>
         </transition-group>
       </div>
       <div class="ui">
-        <div class="score" v-if="gameState != this.constants.gameStates.title">
+        <div class="score" v-if="gameState !== this.constants.gameStates.title">
           {{score}}
         </div>
-        <div class="life" v-bind:class="{ normal: !isDanger, danger: isDanger }" v-bind:style="{width: lifeLength}" v-if="gameState != this.constants.gameStates.title"></div>
-        <div class="dead" v-if="gameState == this.constants.gameStates.gameOver">
+        <div class="life" v-bind:class="[lifeState]" v-bind:style="{width: lifeLength}" v-if="gameState !== this.constants.gameStates.title"></div>
+        <div class="dead" v-if="gameState === this.constants.gameStates.gameOver">
           GAME OVER (r to reset)
         </div>
-        <div class="title" v-if="gameState == this.constants.gameStates.title">
+        <div class="title" v-if="gameState === this.constants.gameStates.title">
           Z X C V
           kick zxcv to start
         </div>
-        <div class="win" v-if="gameState == this.constants.gameStates.cleared">
+        <div class="win" v-if="gameState === this.constants.gameStates.cleared">
           WIN (r to reset)
         </div>
       </div>
@@ -60,11 +60,20 @@
       lifeLength: function(){
         return (this.life / this.constants.maxLife * 100) + "%"
       },
-      alive: function() {
-        return this.life > 0;
+      lifeState: function(){
+        if(this.life >= this.constants.safeLine){
+          return "max";
+        }
+        if(this.life >= this.constants.dangerLine){
+          return "normal";
+        }
+        return "danger";
       },
       isDanger: function(){
         return this.life < this.constants.dangerLine;
+      },
+      alive: function() {
+        return this.life > 0;
       },
       constants: function(){
         return {
@@ -77,12 +86,13 @@
           currentTime: 0,
           maxLife: 10000,
           dangerLine: 3333,
+          safeLine: 9950,
           minDamagePerLife: 10,
-          recoverPerNote: 250,
-          recoverPerHealNote: 3000,
-          dangerDamageReduceRate: 0.65,
-          damageIncreaseSpeed: 0.4,
-          badDamage: 200,
+          recoverPerNote: 150,
+          recoverPerHealNote: 4500,
+          dangerDamageReduceRate: 0.50,
+          damageIncreaseSpeed: 0.25,
+          badDamage: 300,
           displayNotes: 16,
           initialNotes: 1000,
           gameStates: {
@@ -100,7 +110,7 @@
       initNotes: function () {
         this.notes = [];
         for (let i = 0; i < 100; ++i){
-          let notes = [0b0001, 0b0010, 0b0100, 0b1000]; // TODO constants.notes.values とかにしたい
+          let notes = Object.values(this.constants.notes);
           for(let i = notes.length - 1; i > 0; i--){
             let r = Math.floor(Math.random() * (i + 1));
             let tmp = notes[i];
@@ -112,6 +122,10 @@
               {
                 id: this.notes.length,
                 note: note,
+                z: note & this.constants.notes.z,
+                x: note & this.constants.notes.x,
+                c: note & this.constants.notes.c,
+                v: note & this.constants.notes.v,
                 bad: false,
                 heal: false,
               }
@@ -204,7 +218,7 @@
         if(this.isDanger){
           damage *= (1 - this.constants.dangerDamageReduceRate);
         }
-        this.life -= parseInt(damage);
+        this.life -= damage;
       },
 
       triggerKeyboardEvents: function(){
@@ -239,7 +253,7 @@
 
       // zxcvと1248の相互変換がめんどいでござる
       lastKey: function(){
-        for (let [key, _] of Object.entries(this.constants.notes)) {
+        for (let key of Object.keys(this.constants.notes)) {
           if(this.keyboard[key] === 1){
             return key;
           }
@@ -312,7 +326,7 @@
     position: relative;
     width: $note_width * 4 + 50;
     height: $note_height * $note_count + 50;
-    padding: 0px 25px 50px 25px;
+    padding: 0 25px 50px 25px;
     margin: auto;
   }
 
@@ -342,6 +356,10 @@
 
   .danger{
     background-color: #aa3a0d;
+  }
+
+  .max{
+    background-color: #81aa00;
   }
 
   .dead{
