@@ -1,37 +1,26 @@
-<template>
-  <div id="app">
-    <h1>
-      zxcv
-    </h1>
-    <div class="window">
-      <div class="frame_window">
-        <transition-group class="frames" name="notes" tag="div">
-          <div class="frame notes-item" v-bind:key="note.id" v-for="note in recentNotes">
-            <div class="z note" v-bind:class="{active: note.z, bad: note.bad && note.z, heal: note.heal}"></div>
-            <div class="x note" v-bind:class="{active: note.x, bad: note.bad && note.x, heal: note.heal}"></div>
-            <div class="c note" v-bind:class="{active: note.c, bad: note.bad && note.c, heal: note.heal}"></div>
-            <div class="v note" v-bind:class="{active: note.v, bad: note.bad && note.v, heal: note.heal}"></div>
-          </div>
-        </transition-group>
-      </div>
-      <div class="ui">
-        <div class="score" v-if="gameState !== this.constants.gameStates.title">
-          {{score}}
-        </div>
-        <div class="life" v-bind:class="[lifeState]" v-bind:style="{width: lifeLength}" v-if="gameState !== this.constants.gameStates.title"></div>
-        <div class="dead" v-if="gameState === this.constants.gameStates.gameOver">
-          GAME OVER (r to reset)
-        </div>
-        <div class="title" v-if="gameState === this.constants.gameStates.title">
-          Z X C V
-          kick zxcv to start
-        </div>
-        <div class="win" v-if="gameState === this.constants.gameStates.cleared">
-          WIN (r to reset)
-        </div>
-      </div>
-    </div>
-  </div>
+<template lang="pug">
+#app
+  h1
+    | zxcv
+  .window
+    .frame_window
+      transition-group.frames(name='notes', tag='div')
+        .frame.notes-item(v-bind:key='note.id', v-for='note in recentNotes')
+          .z.note(v-bind:class='{active: note.z, bad: note.bad && note.z, heal: note.heal}')
+          .x.note(v-bind:class='{active: note.x, bad: note.bad && note.x, heal: note.heal}')
+          .c.note(v-bind:class='{active: note.c, bad: note.bad && note.c, heal: note.heal}')
+          .v.note(v-bind:class='{active: note.v, bad: note.bad && note.v, heal: note.heal}')
+    .ui
+      .score(v-if='gameState !== this.constants.gameStates.title')
+        | {{score}}
+      .life(v-bind:class='[lifeState]', v-bind:style='{width: lifeLength}', v-if='gameState !== this.constants.gameStates.title')
+      .dead(v-if='gameState === this.constants.gameStates.gameOver')
+        | GAME OVER (r to reset)
+      .title(v-if='gameState === this.constants.gameStates.title')
+        | Z X C V
+        | kick zxcv to start
+      .win(v-if='gameState === this.constants.gameStates.cleared')
+        | WIN (r to reset)
 </template>
 
 <script>
